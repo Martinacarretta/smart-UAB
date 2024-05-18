@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Character set rooster -->
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- style -->
+    <link rel="stylesheet" href="decoration.css"> 
+    <title>Smart UAB</title>
+    
+    <style>
+        .sensor-dropdown {
+            display: none;
+            position: absolute;
+            background-color: #e12929;
+            min-width: 10px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+        .sensor-dropdown a {
+            color: rgb(255, 255, 255);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+        .sensor-dropdown a:hover {
+            background-color: #b41e1e;
+        }
+    </style>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- <canvas id="myChart"></canvas> -->
+{% block content %}
+
+<body id="test">
+    <div class="container">
+        <div class="search-box">
+            <a href="index.html">
+                <h1>WATTWise</h1>
+            </a>
+            <form id="search-form">
+                <input type="text" id="search-input" placeholder="Search ...">
+                <button class="search-btn" type="submit">Search</button>
+            </form>
+        </div>
+
+        <div class="tabs">
+            <li>
+                <i class="sensors"></i>
+                <a href="#" class="sensor-tab">Sensors</a>
+                <div id="sensorDropdown" class="sensor-dropdown">
+                    <a href="#" onclick="selectSensor(1)">Sensor 1</a>
+                    <a href="#" onclick="selectSensor(2)">Sensor 2</a>
+                    <a href="#" onclick="selectSensor(3)">Sensor 3</a>
+                    <a href="#" onclick="selectSensor(4)">Sensor 4</a>
+                    <a href="#" onclick="selectSensor(5)">Sensor 5</a>
+                    <a href="#" onclick="selectSensor(6)">Sensor 6</a>
+                    <a href="#" onclick="selectSensor(7)">Sensor 7</a>
+                    <a href="#" onclick="selectSensor(8)">Sensor 8</a>
+                    <a href="#" onclick="selectSensor(9)">Sensor 9</a>
+                </div>
+            </li>
+            <li>
+                <i class="Predictions"></i>
+                <a href="#">Predictions</a>
+            </li>
+            <li>
+                <i class="Recommendations"></i>
+                <a href="#">Recommendations</a>
+            </li>
+        </div>
+
+        <div id="result" class="card-container">
+
+            <div class="card">
+                <div class="card-content0">
+                    <div class="card-header">
+                        <div class="left-content">
+                            <h3 style="font-weight: 600">Temperature</h3>
+                        </div>
+                        <div class="right-content">
+                            <a class="card-btn">Temperature x time</a>                                     
+                        </div>
+                    </div>
+                </div>
+                <div id="square0"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-content1">
+                    <div class="card-header">
+                        <div class="left-content">
+                            <h3 style="font-weight: 600">CO2</h3>
+                        </div>
+                        <div class="right-content">
+                            <a class="card-btn">CO2 x time</a>                      
+                        </div>
+                    </div>
+                </div>
+                <div id="square1"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-content2">
+                    <div class="card-header">
+                        <div class="left-content">
+                            <h3 style="font-weight: 600">Humidity</h3>
+                        </div>
+                        <div class="right-content">
+                            <a class="card-btn">Humidity x time</a>                          
+                        </div>
+                    </div>
+                </div>
+                <div id="square2"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-content3">
+                    <div class="card-header">
+                        <div class="left-content">
+                            <h3 style="font-weight: 600">Activity</h3>
+                        </div>
+                        <div class="right-content">
+                            <a class="card-btn">Activity x time</a>                         
+                        </div>
+                    </div>
+                </div>
+                <div id="square3"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-content4">
+                    <div class="card-header">
+                        <div class="left-content">
+                            <h3 style="font-weight: 600">Ilumination</h3>
+                        </div>
+                        <div class="right-content">
+                            <a class="card-btn">Ilumination x time</a>                        
+                        </div>
+                    </div>
+                </div>
+                <div id="square4"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-content5">
+                    <div class="card-header">
+                        <div class="left-content">
+                            <h3 style="font-weight: 600">Infrared</h3>
+                        </div>
+                        <div class="right-content">
+                            <a class="card-btn">Infrared x time</a>                        
+                        </div>
+                    </div>
+                </div>
+                <div id="square5"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-content6">
+                    <div class="card-header">
+                        <div class="left-content">
+                            <h3 style="font-weight: 600">Infrared and visible</h3>
+                        </div>
+                        <div class="right-content">
+                            <a class="card-btn">Infrared and visible x time</a>                         
+                        </div>
+                    </div>
+                </div>
+                <div id="square6"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-content7">
+                    <div class="card-header">
+                        <div class="left-content">
+                            <h3 style="font-weight: 600">Pressure</h3>
+                        </div>
+                        <div class="right-content">
+                            <a class="card-btn">Pressure x time</a>                          
+                        </div>
+                    </div>
+                </div>
+                <div id="square7"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-content8">
+                    <div class="card-header">
+                        <div class="left-content">
+                            <h3 style="font-weight: 600">Tvoc</h3>
+                        </div>
+                        <div class="right-content">
+                            <a class="card-btn">Tvoc x time</a>    
+                        </div>
+                    </div>
+                </div> 
+                <div id="square8"></div>
+            </div>
+
+        </div>
+
+        <div class="info"></div>
+    </div>
+
+    <script>
+        // Parse the JSON string to get the figures data
+        var strin = '{{ figures | safe }}'
+        var strin2 = strin.substring(2, strin.length-2);
+        var figuresData = JSON.parse(strin2);
+        // console.log(firstTraceY);
+
+        // Function to create a plot
+        function createPlot(traceX, traceY, plotId) {
+            let traces =[
+                {
+                    x: traceX,
+                    y: traceY,
+                    type: 'scatter'
+                }
+            ];
+
+            let layout = {
+                // title: 'temp',
+                // height: 360,
+                // width: 450
+                autosize: false,
+                width: 400,
+                height: 400,
+                margin: {
+                    l: 35,
+                    r: 30,
+                    b: 150,
+                    t: 10,
+                    pad: 1
+                },
+            };
+
+            let config = {
+            };
+            Plotly.newPlot(plotId, traces, layout, config); //name of id container, array of values, config1(optional), config2 (optional) (check doumentation) https://www.youtube.com/watch?v=GVrjv9ajsJ0&ab_channel=ChristopherEdwards
+        }
+
+        for (let i = 0; i < 9; i++){
+            let traceX = figuresData[i].x;
+            let traceY = figuresData[i].y;
+            let is = "square" + i;
+            createPlot(traceX, traceY, is);
+        }
+
+        // let traceX = figuresData[0].x;
+        // let traceY = figuresData[0].y;
+        // createPlot(traceX, traceY, "square0");
+
+        // let traceX1 = figuresData[1].x;
+        // let traceY1 = figuresData[1].y;
+        // createPlot(traceX1, traceY1, "square1");
+
+        function showSensors() {
+            document.getElementById("sensorDropdown").style.display = "block";
+        }
+
+        function selectSensor(sensorId) {
+            // Redirect to another part of the website with the selected sensor
+            window.location.href = sensorId + ".html";
+        }
+    </script>
+</body>
+{% endblock %}
+</html>
+
+<!-- var figuresData = JSON.parse('[{"mode": "lines", "name": "Activity", "x": ["2024-04-17T01:11:26.415096246Z", "2024-04-17T01:21:26.407947089Z", "2024-04-17T13:01:26.768897815Z", "2024-04-17T13:21:26.783257937Z", "2024-04-18T20:47:39.172080549Z", "2024-04-18T21:07:39.169697687Z", "2024-04-18T21:17:39.174900502Z", "2024-04-20T12:17:40.493449246Z", "2024-04-20T13:17:40.518104583Z", "2024-04-20T13:27:40.540522056Z", "2024-04-25T10:27:44.811136410Z", "2024-04-25T17:27:45.065045266Z", "2024-04-25T17:37:45.068853180Z", "2024-04-25T17:47:45.068527652Z", "2024-04-25T17:57:45.071315595Z", "2024-04-25T18:37:45.092943098Z", "2024-04-25T18:57:45.107765527Z", "2024-04-25T19:07:45.130707472Z"], "y": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null], "type": "scatter"}, {"mode": "lines", "name": "Co2", "x": ["2024-04-17T01:11:26.415096246Z", "2024-04-17T01:21:26.407947089Z", "2024-04-17T13:01:26.768897815Z", "2024-04-17T13:21:26.783257937Z", "2024-04-18T20:47:39.172080549Z", "2024-04-18T21:07:39.169697687Z", "2024-04-18T21:17:39.174900502Z", "2024-04-20T12:17:40.493449246Z", "2024-04-20T13:17:40.518104583Z", "2024-04-20T13:27:40.540522056Z", "2024-04-25T10:27:44.811136410Z", "2024-04-25T17:27:45.065045266Z", "2024-04-25T17:37:45.068853180Z", "2024-04-25T17:47:45.068527652Z", "2024-04-25T17:57:45.071315595Z", "2024-04-25T18:37:45.092943098Z", "2024-04-25T18:57:45.107765527Z", "2024-04-25T19:07:45.130707472Z"], "y": [428, 426, 468, 453, 445, 438, 446, 422, 436, 434, 620, 433, 431, 429, 429, 436, 431, 431], "type": "scatter"}, {"mode": "lines", "name": "Humidity", "x": ["2024-04-17T01:11:26.415096246Z", "2024-04-17T01:21:26.407947089Z", "2024-04-17T13:01:26.768897815Z", "2024-04-17T13:21:26.783257937Z", "2024-04-18T20:47:39.172080549Z", "2024-04-18T21:07:39.169697687Z", "2024-04-18T21:17:39.174900502Z", "2024-04-20T12:17:40.493449246Z", "2024-04-20T13:17:40.518104583Z", "2024-04-20T13:27:40.540522056Z", "2024-04-25T10:27:44.811136410Z", "2024-04-25T17:27:45.065045266Z", "2024-04-25T17:37:45.068853180Z", "2024-04-25T17:47:45.068527652Z", "2024-04-25T17:57:45.071315595Z", "2024-04-25T18:37:45.092943098Z", "2024-04-25T18:57:45.107765527Z", "2024-04-25T19:07:45.130707472Z"], "y": [43.0, 42.5, 45.5, 46.0, 45.5, 45.0, 45.0, 45.0, 46.5, 46.5, 49.0, 50.0, 50.5, 50.5, 50.5, 50.5, 50.5, 50.5], "type": "scatter"}, {"mode": "lines", "name": "Illumination", "x": ["2024-04-17T01:11:26.415096246Z", "2024-04-17T01:21:26.407947089Z", "2024-04-17T13:01:26.768897815Z", "2024-04-17T13:21:26.783257937Z", "2024-04-18T20:47:39.172080549Z", "2024-04-18T21:07:39.169697687Z", "2024-04-18T21:17:39.174900502Z", "2024-04-20T12:17:40.493449246Z", "2024-04-20T13:17:40.518104583Z", "2024-04-20T13:27:40.540522056Z", "2024-04-25T10:27:44.811136410Z", "2024-04-25T17:27:45.065045266Z", "2024-04-25T17:37:45.068853180Z", "2024-04-25T17:47:45.068527652Z", "2024-04-25T17:57:45.071315595Z", "2024-04-25T18:37:45.092943098Z", "2024-04-25T18:57:45.107765527Z", "2024-04-25T19:07:45.130707472Z"], "y": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null], "type": "scatter"}, {"mode": "lines", "name": "Infrared", "x": ["2024-04-17T01:11:26.415096246Z", "2024-04-17T01:21:26.407947089Z", "2024-04-17T13:01:26.768897815Z", "2024-04-17T13:21:26.783257937Z", "2024-04-18T20:47:39.172080549Z", "2024-04-18T21:07:39.169697687Z", "2024-04-18T21:17:39.174900502Z", "2024-04-20T12:17:40.493449246Z", "2024-04-20T13:17:40.518104583Z", "2024-04-20T13:27:40.540522056Z", "2024-04-25T10:27:44.811136410Z", "2024-04-25T17:27:45.065045266Z", "2024-04-25T17:37:45.068853180Z", "2024-04-25T17:47:45.068527652Z", "2024-04-25T17:57:45.071315595Z", "2024-04-25T18:37:45.092943098Z", "2024-04-25T18:57:45.107765527Z", "2024-04-25T19:07:45.130707472Z"], "y": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null], "type": "scatter"}, {"mode": "lines", "name": "Infrared and visible", "x": ["2024-04-17T01:11:26.415096246Z", "2024-04-17T01:21:26.407947089Z", "2024-04-17T13:01:26.768897815Z", "2024-04-17T13:21:26.783257937Z", "2024-04-18T20:47:39.172080549Z", "2024-04-18T21:07:39.169697687Z", "2024-04-18T21:17:39.174900502Z", "2024-04-20T12:17:40.493449246Z", "2024-04-20T13:17:40.518104583Z", "2024-04-20T13:27:40.540522056Z", "2024-04-25T10:27:44.811136410Z", "2024-04-25T17:27:45.065045266Z", "2024-04-25T17:37:45.068853180Z", "2024-04-25T17:47:45.068527652Z", "2024-04-25T17:57:45.071315595Z", "2024-04-25T18:37:45.092943098Z", "2024-04-25T18:57:45.107765527Z", "2024-04-25T19:07:45.130707472Z"], "y": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null], "type": "scatter"}, {"mode": "lines", "name": "Pressure", "x": ["2024-04-17T01:11:26.415096246Z", "2024-04-17T01:21:26.407947089Z", "2024-04-17T13:01:26.768897815Z", "2024-04-17T13:21:26.783257937Z", "2024-04-18T20:47:39.172080549Z", "2024-04-18T21:07:39.169697687Z", "2024-04-18T21:17:39.174900502Z", "2024-04-20T12:17:40.493449246Z", "2024-04-20T13:17:40.518104583Z", "2024-04-20T13:27:40.540522056Z", "2024-04-25T10:27:44.811136410Z", "2024-04-25T17:27:45.065045266Z", "2024-04-25T17:37:45.068853180Z", "2024-04-25T17:47:45.068527652Z", "2024-04-25T17:57:45.071315595Z", "2024-04-25T18:37:45.092943098Z", "2024-04-25T18:57:45.107765527Z", "2024-04-25T19:07:45.130707472Z"], "y": [1001.5, 1001.6, 1001.4, 1001.2, 1007.4, 1007.6, 1007.8, 1003.1, 1003.1, 1003.0, 998.4, 995.2, 995.2, 995.3, 995.2, 995.4, 995.4, 995.6], "type": "scatter"}, {"mode": "lines", "name": "Temperature", "x": ["2024-04-17T01:11:26.415096246Z", "2024-04-17T01:21:26.407947089Z", "2024-04-17T13:01:26.768897815Z", "2024-04-17T13:21:26.783257937Z", "2024-04-18T20:47:39.172080549Z", "2024-04-18T21:07:39.169697687Z", "2024-04-18T21:17:39.174900502Z", "2024-04-20T12:17:40.493449246Z", "2024-04-20T13:17:40.518104583Z", "2024-04-20T13:27:40.540522056Z", "2024-04-25T10:27:44.811136410Z", "2024-04-25T17:27:45.065045266Z", "2024-04-25T17:37:45.068853180Z", "2024-04-25T17:47:45.068527652Z", "2024-04-25T17:57:45.071315595Z", "2024-04-25T18:37:45.092943098Z", "2024-04-25T18:57:45.107765527Z", "2024-04-25T19:07:45.130707472Z"], "y": [20.6, 20.5, 20.3, 20.3, 19.3, 19.3, 19.3, 18.9, 19.0, 19.0, 17.5, 17.6, 17.6, 17.6, 17.6, 17.5, 17.5, 17.5], "type": "scatter"}, {"mode": "lines", "name": "Tvoc", "x": ["2024-04-17T01:11:26.415096246Z", "2024-04-17T01:21:26.407947089Z", "2024-04-17T13:01:26.768897815Z", "2024-04-17T13:21:26.783257937Z", "2024-04-18T20:47:39.172080549Z", "2024-04-18T21:07:39.169697687Z", "2024-04-18T21:17:39.174900502Z", "2024-04-20T12:17:40.493449246Z", "2024-04-20T13:17:40.518104583Z", "2024-04-20T13:27:40.540522056Z", "2024-04-25T10:27:44.811136410Z", "2024-04-25T17:27:45.065045266Z", "2024-04-25T17:37:45.068853180Z", "2024-04-25T17:47:45.068527652Z", "2024-04-25T17:57:45.071315595Z", "2024-04-25T18:37:45.092943098Z", "2024-04-25T18:57:45.107765527Z", "2024-04-25T19:07:45.130707472Z"], "y": [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100], "type": "scatter"}]'); -->
