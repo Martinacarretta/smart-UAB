@@ -1,6 +1,6 @@
 # Smart UAB
 
-This repository contains a collection of a notebook and code for handling sensor data, occupation data, energy consumption data, and PV production data. It also includes the training of machine learning models to create predictions based on this data.
+This repository contains a Jupyter notebook, `Synthesis_project.ipynb`, and code for handling and analyzing sensor data, occupation data, energy consumption data, and PV production data. It also includes the training of machine learning models to create predictions based on this data.
 
 ## Features
 
@@ -9,6 +9,14 @@ This repository contains a collection of a notebook and code for handling sensor
 - Dataframe handling of energy consumption data
 - Dataframe handling of PV production data
 - Training of machine learning models for predictions
+- Correlation analysis of energy consumption and occupation
+- Correlation analysis of PV and temperature/weather
+- Creation of merging dataset between occupation and consumption (with all hour slots)
+- Prediction with functions of consumption based on other weekdays from the same month of previous years
+
+## Jupyter Notebook
+
+The Jupyter notebook, [`Synthesis_project.ipynb`](/home/martina/codi2/p_g2/Synthesis_project.ipynb), is the heart of this repository. It contains detailed analysis and visualizations of the data, as well as the implementation of machine learning models for predictions. The notebook is divided into several sections, each focusing on a different aspect of the data.
 
 ## Website
 
@@ -18,6 +26,6 @@ In addition to the data handling and model training, this repository also includ
 
 The website's structure and aesthetics are defined in the `templates` directory. This directory contains the HTML templates for the different pages that a user can navigate. 
 
-The main code of the website is located in `app.py`. This file handles the routing and logic for serving the web pages, processing user requests, and displaying the sensor data and predictions.
+The main code of the website is located in [`app.py`](website/app.py). This file handles the routing and logic for serving the web pages, processing user requests, and displaying the sensor data and predictions.
 
 The data from the sensors is stored in `data.db`, which is a SQLite database. This database is used to persist and retrieve the sensor data for display on the website.
