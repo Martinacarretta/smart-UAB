@@ -318,6 +318,45 @@ body{
     font-size: 15px;
 }
 
+.instructions p {
+    color: #000000;
+    font-size: 17px;
+}
+
+#prediction-form {
+    background-color: white;
+    border: 1px solid black;
+    padding: 20px;
+    width: 500px;
+    margin: 0 auto;
+}
+
+#prediction-form label {
+    display: block;
+    margin-bottom: 10px;
+    color: black;
+}
+
+#prediction-form select, #prediction-form input[type="date"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid black;
+}
+
+#prediction-form input[type="submit"] {
+    background-color: #e12929;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+#prediction-form input[type="submit"]:hover {
+    background-color: darkred;
+}
+
+
 @media screen and (max-width: 550px) {
     .search-box{
         justify-content: center;

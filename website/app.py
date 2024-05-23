@@ -1,23 +1,34 @@
+# Imports
 import paho.mqtt.client as mqtt
 import json
 import sqlite3
-from flask import Flask, render_template, send_file
+from flask import Flask, render_template, send_file, request, jsonify
 from flask_socketio import SocketIO, emit
 import paho.mqtt.client as mqtt
 import plotly
 import plotly.graph_objs as go
+import pandas as pd
+import matplotlib.pyplot as plt
+import base64
+import os
+from io import BytesIO
+from datetime import datetime
+from datetime import timedelta
 
+# Initialize Flask and SocketIO
 app = Flask(__name__)
 socketio = SocketIO(app)
 
-# MQTT broker details
+
+# MQTT settings:
 mqtt_host = "eu1.cloud.thethings.network"
 mqtt_port = 1883
-
 mqtt_username = "sensors-openlab@ttn"
-mqtt_password = "NNSXS.AKU22YDKMFUNHGKYVJMMQVDLOBYMQBLAACLENZA.2KOWOPCVUXWCLN6SVP4LRZUYKBKMP7XDWB7OJHQENFMTVF4JSLFA"
+# mqtt_password = "NNSXS.AKU22YDKMFUNHGKYVJMMQVDLOBYMQBLAACLENZA.2KOWOPCVUXWCLN6SVP4LRZUYKBKMP7XDWB7OJHQENFMTVF4JSLFA"
+mqtt_password = "NNSXS.KMPUFJE3MR5OVSKWJHUQQITO7CVJTI5O6IRVCSI.NTELY7IRGYY3GV6D3WK42WPSKQ3HLMZBOEEZ46MFDHCJPKW7TRUQ"
 
-# Handle connection events and incoming messages.
+
+# MQTT event handlers: Handle connection events and incoming messages.
 def on_message(client, userdata, message):
     decoded_data = json.loads(message.payload.decode("utf-8"))
     uplink_message = decoded_data.get("uplink_message", {})
@@ -33,6 +44,13 @@ def on_message(client, userdata, message):
         save_to_sqlite(decoded_payload, device_ids, time)
         q = display_data() # Return things after saving them
 
+def on_connect(client, userdata, flags, reason_code, properties):
+    if reason_code.is_failure:
+        print(f"Failed to connect: {reason_code}. loop_forever() will retry connection")
+    else:
+        client.subscribe("#")
+
+# Utility functions
 def save_to_sqlite(data, info, time):
     try:
         conn = sqlite3.connect('data.db')
@@ -48,12 +66,6 @@ def save_to_sqlite(data, info, time):
         conn.close()
     except Exception as e:
         print(f"Error in save_to_sqlite: {e}")
-
-@app.route("/")
-def index():
-    #print(rows)
-    #c=mqttc.loop(timeout = 180)
-    return render_template("index.html")
 
 def fetch_sensor_data(sensor_id):
     conn = sqlite3.connect('data.db')
@@ -84,27 +96,6 @@ def create_plots(sensor_data):
     print(figures)
     return figures
 
-@app.route('/<sensorId>.html')
-def sensor_page(sensorId):
-    if sensorId == "index":
-        return render_template("index.html")
-    else: 
-        sensors = ["eui-24e124710c408089", "eui-24e124128c147444", "eui-24e124128c147500", "eui-24e124128c147204", "eui-24e124128c147499", "am307-9074", "q4-1003-7456", "eui-24e124128c147446", "eui-24e124128c147470"]
-        sensorID = sensors[int(sensorId)-1] #Change from number from 1-9 to actual ID to retrieve info from table
-        # Fetch data for the specified sensor_id
-        sensor_data = fetch_sensor_data(sensorID)
-        # Create plots for the fetched sensor data
-        figures = create_plots(sensor_data)
-        return render_template(sensorId + '.html',figures=json.dumps(figures))
-
-@app.route('/decoration.css')
-def return_deco():
-    return send_file('templates/decoration.css')
-
-@app.route('/script.js')
-def return_js():
-    return send_file('templates/script.js')
-
 def display_data():
     try:
         conn = sqlite3.connect('data.db')
@@ -119,11 +110,158 @@ def display_data():
     except Exception as e:
         print(f"Error in display_data: {e}")
 
-def on_connect(client, userdata, flags, reason_code, properties):
-    if reason_code.is_failure:
-        print(f"Failed to connect: {reason_code}. loop_forever() will retry connection")
+# Routes
+@app.route("/")
+def index():
+    #print(rows)
+    #c=mqttc.loop(timeout = 180)
+    return render_template("index.html")
+
+@app.route('/<sensorId>.html')
+def sensor_page(sensorId):
+    if sensorId == "index":
+        return render_template("index.html")
+    elif sensorId == "predictions":
+        return render_template("predictions.html")
+    else: 
+        sensors = ["eui-24e124710c408089", "eui-24e124128c147444", "eui-24e124128c147500", "eui-24e124128c147204", "eui-24e124128c147499", "am307-9074", "q4-1003-7456", "eui-24e124128c147446", "eui-24e124128c147470"]
+        try:
+            sensorID = sensors[int(sensorId)-1] #Change from number from 1-9 to actual ID to retrieve info from table
+        except ValueError:
+            return jsonify({'error': 'Invalid sensorId'}), 400
+        # Fetch data for the specified sensor_id
+        sensor_data = fetch_sensor_data(sensorID)
+        # Create plots for the fetched sensor data
+        figures = create_plots(sensor_data)
+        return render_template(sensorId + '.html',figures=json.dumps(figures))
+
+@app.route('/decoration.css')
+def return_deco():
+    return send_file('templates/decoration.css')
+
+@app.route('/script.js')
+def return_js():
+    return send_file('templates/script.js')
+
+################################## PREDICTIONS ##################################
+def predict_energy_occupation(df, result_mode, month, week_day, hour=None):
+    if hour is None:
+        filtered_df = df[(df['Month'] == month) & (df['Week_day'] == week_day)]
     else:
-        client.subscribe("#")
+        filtered_df = df[(df['Month'] == month) & (df['Week_day'] == week_day) & (df['Hour'] == hour)]
+
+    if not filtered_df.empty:
+        if result_mode == 'energy-consumption':
+            avg_value = filtered_df['Energy consumption [kwh]'].mean()
+            avg_value = avg_value * (1 if hour is None else 0.8)
+        elif result_mode == 'occupation':
+            period_mask = (filtered_df['Date'] >= pd.Timestamp('2020-01-09')) & (filtered_df['Date'] <= pd.Timestamp('2022-01-07'))
+            filtered_df.loc[period_mask, 'Occupation'] *= 2
+            avg_value = filtered_df['Occupation'].mean()
+        else:
+            return "No data available for the specified parameters"
+        return avg_value
+    else:
+        return "No data available for the specified parameters"
+
+def predict_until(df, df_mode, result_mode, end_date):
+    start_value = df['Date'].max() + pd.Timedelta(days=1) if df_mode == 'daily' else df['Date'].max() + pd.Timedelta(hours=1)
+    date_range = pd.date_range(start=start_value, end=end_date, freq='D' if df_mode == 'daily' else 'h')
+
+    future_dates = pd.DataFrame(date_range, columns=['Date'])
+    future_dates['Week_day'] = future_dates['Date'].dt.day_name()
+    future_dates['Month'] = future_dates['Date'].dt.month_name()
+    if df_mode == 'hourly':
+        future_dates['Hour'] = future_dates['Date'].dt.hour
+
+    predictions = []
+    for _, row in future_dates.iterrows():
+        month = row['Month']
+        week_day = row['Week_day']
+        hour = row['Hour'] if df_mode == 'hourly' else None
+        prediction = predict_energy_occupation(df, result_mode, month, week_day, hour)
+        predictions.append(prediction)
+
+    future_dates['predicted_' + result_mode] = predictions
+    return future_dates
+
+
+def visualise_prediction(df, df_mode, result_mode):
+    plt.figure(figsize=(10, 6))
+    dates = df['Date']
+    if result_mode == 'energy-consumption':
+        plt.plot(dates, df['predicted_energy-consumption'], label='Predicted Energy Consumption', color='red')
+    elif result_mode == 'occupation':
+        plt.plot(dates, df['predicted_occupation'], label='Predicted Occupation', color='lightgreen')
+    
+    # Determine the number of ticks
+    if df_mode == 'daily':
+        p = len(df) // 15
+    elif df_mode == 'hourly':
+        p = len(df) // 24
+    
+    # Ensure the last date is included in the ticks
+    if p == 0:
+        p = 1  # Avoid division by zero if df is too small
+    ticks = dates[::p].tolist()
+    if dates.iloc[-1] not in ticks:
+        ticks.append(dates.iloc[-1])
+    
+    plt.xticks(ticks, rotation=45)
+    plt.title(df_mode + ' ' + result_mode + ' forecast')
+    plt.xlabel('Date')
+    plt.ylabel(result_mode.replace('-', ' ').capitalize())
+    plt.legend()
+    plt.grid(True)
+
+    buf = BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+
+    image_base64 = base64.b64encode(buf.read()).decode('utf-8')
+    buf.close()
+
+    return image_base64
+
+
+def prediction(df, df_mode, result_mode, end_date):
+    future_dates = predict_until(df, df_mode, result_mode, end_date)
+    image_base64 = visualise_prediction(future_dates, df_mode, result_mode)
+    return future_dates, image_base64
+
+@app.route('/predictions.html', methods=['POST'])
+def create_prediction():
+     # Get the directory of the current script
+    current_dir = os.path.dirname(os.path.realpath(__file__))
+
+    # Construct the paths to the CSV files
+    oce_d_path = os.path.join(current_dir, 'occupation_energy_daily.csv')
+    oce_h_path = os.path.join(current_dir, 'occupation_energy_hourly.csv')
+
+    oce_d = pd.read_csv(oce_d_path)
+    oce_h = pd.read_csv(oce_h_path)
+    
+    oce_d['Date'] = pd.to_datetime(oce_d['Date'])
+    oce_h['Date'] = pd.to_datetime(oce_h['Date'])
+
+    data = request.json
+    result_type = data['result-type']
+    mode = data['mode']
+    date = data['date']
+
+    if mode == 'daily':
+        df = oce_d
+    elif mode == 'hourly':
+        df = oce_h
+    else:
+        return jsonify({'error': 'Invalid mode'}), 400
+
+    end_date = datetime.strptime(date, '%Y-%m-%d')
+
+    print(mode, result_type, end_date)
+    future_dates, image_base64 = prediction(df, mode, result_type, end_date)
+    print(future_dates)
+    return jsonify({'prediction': future_dates.to_dict(), 'image': image_base64})
 
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 mqttc.on_connect = on_connect

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="decoration.css">
+    <title>Smart UAB</title>
+    
+    <style>
+        .sensor-dropdown {
+            display: none;
+            position: absolute;
+            background-color: #e12929;
+            min-width: 10px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+        .sensor-dropdown a {
+            color: rgb(255, 255, 255);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+        .sensor-dropdown a:hover {
+            background-color: #b41e1e;
+        }
+    </style>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body id="test">
+    <div class="container">
+        <div class="search-box">
+            <a href="index.html">
+                <h1>WATTWise</h1>
+            </a>
+            <form id="search-form">
+                <input type="text" id="search-input" placeholder="Search ...">
+                <button class="search-btn" type="submit">Search</button>
+            </form>
+        </div>
+
+        <div class="tabs">
+            <li>
+                <i class="sensors"></i>
+                <a href="#" class="sensor-tab" onclick="showSensors()">Sensors</a>
+                <div id="sensorDropdown" class="sensor-dropdown">
+                    <a href="#" onclick="selectSensor(1)">Sensor 1</a>
+                    <a href="#" onclick="selectSensor(2)">Sensor 2</a>
+                    <a href="#" onclick="selectSensor(3)">Sensor 3</a>
+                    <a href="#" onclick="selectSensor(4)">Sensor 4</a>
+                    <a href="#" onclick="selectSensor(5)">Sensor 5</a>
+                    <a href="#" onclick="selectSensor(6)">Sensor 6</a>
+                    <a href="#" onclick="selectSensor(7)">Sensor 7</a>
+                    <a href="#" onclick="selectSensor(8)">Sensor 8</a>
+                    <a href="#" onclick="selectSensor(9)">Sensor 9</a>
+                </div>
+            </li>
+            <li>
+                <i class="Predictions"></i>
+                <a href="predictions.html">Predictions</a>
+            </li>
+            <li>
+                <i class="Recommendations"></i>
+                <a href="#">Recommendations</a>
+            </li>
+        </div>
+
+        <div class="instructions" style="margin-bottom: 30px;">
+            <p>Please ensure that no fields are left blank before submitting the form.</p>
+            <p>If you select 'Hourly' mode, please be patient as the system needs to process more rows of data compared to 'Daily' mode.</p>
+            <p>Once you have submitted the form, the prediction plot will be displayed below.</p>
+        </div>
+
+        <form id="prediction-form" style="margin-bottom: 20px;">
+            <label for="result-type">Result Type:</label>
+            <select id="result-type" name="result-type">
+                <option value="" disabled selected>-</option>
+                <option value="occupation">Occupation</option>
+                <option value="energy-consumption">Energy Consumption</option>
+            </select>
+        
+            <label for="mode">Mode:</label>
+            <select id="mode" name="mode">
+                <option value="" disabled selected>-</option>
+                <option value="daily">Daily</option>
+                <option value="hourly">Hourly</option>
+            </select>
+        
+            <label for="date">Date:</label>
+            <input type="date" id="date" name="date" placeholder="mm/dd/yyyy">
+        
+            <input type="submit" value="Create Prediction">
+        </form>
+        
+        <div style="height: 100px; padding-top: 20px;">
+
+        <img id="prediction-plot" src="" alt="Prediction Plot">
+
+        <div class="info"></div>
+    </div>
+
+    <script>
+        document.getElementById('prediction-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            var resultType = document.getElementById('result-type').value;
+            var mode = document.getElementById('mode').value;
+            var date = document.getElementById('date').value;
+
+            var data = {
+                'result-type': resultType,
+                'mode': mode,
+                'date': date
+            };
+
+            fetch('/predictions.html', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('Error:', data.error);
+                    return;
+                }
+                var image = data.image;
+                document.getElementById('prediction-plot').src = 'data:image/png;base64,' + image;
+                
+                // Reset the form to allow for a new prediction
+                document.getElementById('prediction-form').reset();
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        function showSensors() {
+            document.getElementById("sensorDropdown").style.display = "block";
+        }
+
+        function selectSensor(sensorId) {
+            window.location.href = sensorId + ".html";
+        }
+    </script>
+</body>
+</html>
