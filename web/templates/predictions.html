@@ -1,12 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="decoration.css">
     <title>Smart UAB</title>
-    
     <style>
         .sensor-dropdown {
             display: none;
@@ -25,11 +23,64 @@
         .sensor-dropdown a:hover {
             background-color: #b41e1e;
         }
+
+        /* .plot-container {
+            margin-bottom: 5px;  Adjust as needed 
+        } 
+        */
+        .search-box {
+            margin-top: 10px;  /* Adjust as needed */
+        }
+
+        #prediction-plot {
+            display: none; /* Initially hidden */
+            width: 100%;
+            height: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        #prediction-table {
+            margin-top: 50px;
+        }
+        #prediction-table th {
+            background-color: #e12929;
+            color: #000000; 
+        }
+        #prediction-table td {
+            color: black;
+        }
+
+        #download {
+            display: none;  /* Initially hidden */
+            margin-top: 450px;
+            background-color: #e12929;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
     </style>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
 
+</head>
 <body id="test">
     <div class="container">
         <div class="search-box">
@@ -74,7 +125,7 @@
             <p>Once you have submitted the form, the prediction plot will be displayed below.</p>
         </div>
 
-        <form id="prediction-form" style="margin-bottom: 20px;">
+        <form id="prediction-form">
             <label for="result-type">Result Type:</label>
             <select id="result-type" name="result-type">
                 <option value="" disabled selected>-</option>
@@ -95,11 +146,14 @@
             <input type="submit" value="Create Prediction">
         </form>
         
-        <div style="height: 100px; padding-top: 20px;">
+        <div style="height: 150px">
+            <img id="prediction-plot" src="" alt="Prediction Plot">
+        </div>
 
-        <img id="prediction-plot" src="" alt="Prediction Plot">
+        <button id="download">Download CSV</button>
 
-        <div class="info"></div>
+        <div id="prediction-table"></div>
+
     </div>
 
     <script>
@@ -129,14 +183,87 @@
                     console.error('Error:', data.error);
                     return;
                 }
+
+                // Display the plot
                 var image = data.image;
                 document.getElementById('prediction-plot').src = 'data:image/png;base64,' + image;
-                
+                document.getElementById('prediction-plot').style.display = 'block';
+
+                // Create a table to display the data
+                var predictionData = data.prediction;
+                var table = document.createElement('table');
+                table.setAttribute('border', '1');
+
+                // Create table header
+                var headerRow = document.createElement('tr');
+                var headers = Object.keys(predictionData[0]);
+                headers.forEach(function(header) {
+                    var th = document.createElement('th');
+                    th.textContent = header;
+                    headerRow.appendChild(th);
+                });
+                table.appendChild(headerRow);
+
+                // Create table rows
+                predictionData.forEach(function(record) {
+                    var row = document.createElement('tr');
+                    Object.values(record).forEach(function(value) {
+                        var td = document.createElement('td');
+                        td.textContent = value;
+                        row.appendChild(td);
+                    });
+                    table.appendChild(row);
+                });
+
+                // Append the table to the div
+                var predictionTableDiv = document.getElementById('prediction-table');
+                predictionTableDiv.innerHTML = '';  // Clear previous table
+                predictionTableDiv.appendChild(table);
+
+                // Remove any existing event listener from the "Download CSV" button
+                var oldDownloadButton = document.getElementById('download');
+                var newDownloadButton = oldDownloadButton.cloneNode(true);
+                oldDownloadButton.parentNode.replaceChild(newDownloadButton, oldDownloadButton);
+
+                // Add the CSV download button and its functionality
+                document.getElementById('download').addEventListener('click', function () {
+                    var csv = tableToCSV(table);
+                    var csvData = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+
+                    var link = document.createElement('a');
+                    link.setAttribute('href', csvData);
+                    link.setAttribute('download', 'table_data.csv');
+                    link.style.display = 'none';
+
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                });
+
+
+                function tableToCSV(table) {
+                    var data = [];
+                    var rows = table.querySelectorAll('tr');
+
+                    for (var i = 0; i < rows.length; i++) {
+                        var row = [], cols = rows[i].querySelectorAll('td, th');
+
+                        for (var j = 0; j < cols.length; j++) {
+                            row.push(cols[j].innerText);
+                        }
+
+                        data.push(row.join(','));
+                    }
+
+                    return data.join('\n');
+                }
+
                 // Reset the form to allow for a new prediction
                 document.getElementById('prediction-form').reset();
             })
             .catch(error => console.error('Error:', error));
         });
+
 
         function showSensors() {
             document.getElementById("sensorDropdown").style.display = "block";

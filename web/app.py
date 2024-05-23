@@ -212,6 +212,7 @@ def visualise_prediction(df, df_mode, result_mode):
     plt.xlabel('Date')
     plt.ylabel(result_mode.replace('-', ' ').capitalize())
     plt.legend()
+    plt.subplots_adjust(bottom=0.2)  # Adjust the space around the plot
     plt.grid(True)
 
     buf = BytesIO()
@@ -261,7 +262,7 @@ def create_prediction():
     print(mode, result_type, end_date)
     future_dates, image_base64 = prediction(df, mode, result_type, end_date)
     print(future_dates)
-    return jsonify({'prediction': future_dates.to_dict(), 'image': image_base64})
+    return jsonify({'prediction': future_dates.to_dict('records'), 'image': image_base64})
 
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 mqttc.on_connect = on_connect
