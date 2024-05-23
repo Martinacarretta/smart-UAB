@@ -240,7 +240,7 @@ def create_prediction():
 
     oce_d = pd.read_csv(oce_d_path)
     oce_h = pd.read_csv(oce_h_path)
-    
+
     oce_d['Date'] = pd.to_datetime(oce_d['Date'])
     oce_h['Date'] = pd.to_datetime(oce_h['Date'])
 
