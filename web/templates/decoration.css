@@ -74,11 +74,6 @@ body{
     background-color: #b41e1e;
 }
 
-.container .search-box {
-    position: relative;
-    font-size: 26px;  
-}
-
 .black-text {
     color: #000000;
     margin: 5px;
@@ -440,20 +435,28 @@ th {
     background-color: #e12929;
     color: #ffffff;
     text-align: center;
-    padding: 20px 0;
+    /* padding: 20px 0; */
     position: relative;
     bottom: 0;
     width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 15px 0;
 }
 
 .wrapper {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-}
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 15px 0;}
 
 .content {
     flex: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 15px 0;
 }
 
 @media screen and (max-width: 550px) {
