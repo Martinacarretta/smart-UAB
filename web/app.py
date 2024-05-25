@@ -281,47 +281,50 @@ def get_sun_times(date, latitude, longitude): # Get sunrise and sunset times for
 def sensor_insights(co2, activity, humidity, illumination, infrared, infrared_and_visible, pressure, temperature, tvoc, date, hour):
     insights = []
     date_obj = datetime.strptime(date, '%Y-%m-%d')
-    season = determine_season(date_obj)
+    if date_obj.weekday() >= 5:
+        insights.append("Weekend day - University is closed. No actions needed.")
+    else: 
+        season = determine_season(date_obj)
 
-    # Barcelona coordinates
-    latitude = 41.3851
-    longitude = 2.1734
+        # Barcelona coordinates
+        latitude = 41.3851
+        longitude = 2.1734
 
-    sunrise, sunset = get_sun_times(date_obj, latitude, longitude)
-    current_time = pytz.utc.localize(date_obj.replace(hour=hour))
+        sunrise, sunset = get_sun_times(date_obj, latitude, longitude)
+        current_time = pytz.utc.localize(date_obj.replace(hour=hour))
 
-    # University closed hours: 8 PM to 8 AM
-    if 20 <= hour or hour < 8:
-        insights.append("University is closed. No actions needed.")
-        return insights
+        # University closed hours: 8 PM to 8 AM
+        if 20 <= hour or hour < 8:
+            insights.append("University is closed. No actions needed.")
+            return insights
 
-    # Extend sunrise and sunset times for lighting rules
-    extended_sunrise = sunrise + timedelta(hours=2)
-    extended_sunset = sunset - timedelta(hours=1)
+        # Extend sunrise and sunset times for lighting rules
+        extended_sunrise = sunrise + timedelta(hours=2)
+        extended_sunset = sunset - timedelta(hours=1)
 
-    # Turn off lights if it's within 2 hours after sunrise or before sunset
-    if extended_sunrise < current_time < extended_sunset and illumination > 300:
-        insights.append("Consider closing the lights, there's probably sufficient natural light.")
+        # Turn off lights if it's within 2 hours after sunrise or before sunset
+        if extended_sunrise < current_time < extended_sunset and illumination > 300:
+            insights.append("Consider closing the lights, there's probably sufficient natural light.")
 
-    # Air quality: Open the window if CO2 levels or TVOC are high, but consider the season
-    if co2 > 800:  # assuming 1000 ppm is a threshold for high CO2 levels
-        if season == 'summer':  # don't open window if it's too hot in summer
-            insights.append("Consider opening the window to reduce CO2 levels. Open the door in case of very high temperature outside.")
-        elif season == 'winter':  # don't open window if it's too cold in winter
-            insights.append("Consider opening the window to reduce CO2 levels. Open the door in case of very low temperature outside.")
-        else:
-            insights.append("Consider opening the window to reduce CO2 levels.")
+        # Air quality: Open the window if CO2 levels or TVOC are high, but consider the season
+        if co2 > 800:  # assuming 1000 ppm is a threshold for high CO2 levels
+            if season == 'summer':  # don't open window if it's too hot in summer
+                insights.append("Consider opening the window to reduce CO2 levels. Open the door in case of very high temperature outside.")
+            elif season == 'winter':  # don't open window if it's too cold in winter
+                insights.append("Consider opening the window to reduce CO2 levels. Open the door in case of very low temperature outside.")
+            else:
+                insights.append("Consider opening the window to reduce CO2 levels.")
 
-    if tvoc > 500:  # assuming 500 ppb is a threshold for high TVOC levels
-        if season == 'summer':
-            insights.append("Consider opening the window to improve air quality. Open the door in case of very high temperature outside.")
-        elif season == 'winter':
-            insights.append("Consider opening the window to improve air quality. Open the door in case of very low temperature outside.")
-        else:
-            insights.append("Consider opening the window to improve air quality.")
+        if tvoc > 500:  # assuming 500 ppb is a threshold for high TVOC levels
+            if season == 'summer':
+                insights.append("Consider opening the window to improve air quality. Open the door in case of very high temperature outside.")
+            elif season == 'winter':
+                insights.append("Consider opening the window to improve air quality. Open the door in case of very low temperature outside.")
+            else:
+                insights.append("Consider opening the window to improve air quality.")
 
-    if not insights:
-        insights.append("No specific actions needed based on current sensor readings.")
+        if not insights:
+            insights.append("No specific actions needed based on current sensor readings.")
 
     return insights
 
