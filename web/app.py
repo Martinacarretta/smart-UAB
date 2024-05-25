@@ -4,7 +4,6 @@ import json
 import sqlite3
 from flask import Flask, render_template, send_file, request, jsonify
 from flask_socketio import SocketIO, emit
-import paho.mqtt.client as mqtt
 import plotly
 import plotly.graph_objs as go
 import pandas as pd
@@ -12,8 +11,11 @@ import matplotlib.pyplot as plt
 import base64
 import os
 from io import BytesIO
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
+from dateutil.parser import parse
+from astral.sun import sun
+from astral import LocationInfo
+import pytz
 
 # Initialize Flask and SocketIO
 app = Flask(__name__)
@@ -207,6 +209,7 @@ def visualise_prediction(df, df_mode, result_mode):
     if dates.iloc[-1] not in ticks:
         ticks.append(dates.iloc[-1])
     
+    # Do plot
     plt.xticks(ticks, rotation=45)
     plt.title(df_mode + ' ' + result_mode + ' forecast')
     plt.xlabel('Date')
@@ -214,14 +217,11 @@ def visualise_prediction(df, df_mode, result_mode):
     plt.legend()
     plt.subplots_adjust(bottom=0.2)  # Adjust the space around the plot
     plt.grid(True)
-
     buf = BytesIO()
     plt.savefig(buf, format='png')
     buf.seek(0)
-
     image_base64 = base64.b64encode(buf.read()).decode('utf-8')
     buf.close()
-
     return image_base64
 
 
@@ -235,13 +235,11 @@ def create_prediction():
      # Get the directory of the current script
     current_dir = os.path.dirname(os.path.realpath(__file__))
 
-    # Construct the paths to the CSV files
+    # Construct the paths to the CSV files and prepare pd
     oce_d_path = os.path.join(current_dir, 'occupation_energy_daily.csv')
     oce_h_path = os.path.join(current_dir, 'occupation_energy_hourly.csv')
-
     oce_d = pd.read_csv(oce_d_path)
     oce_h = pd.read_csv(oce_h_path)
-
     oce_d['Date'] = pd.to_datetime(oce_d['Date'])
     oce_h['Date'] = pd.to_datetime(oce_h['Date'])
 
@@ -265,18 +263,87 @@ def create_prediction():
     return jsonify({'prediction': future_dates.to_dict('records'), 'image': image_base64})
 
 ########################## WARNINGS ############################################
+
+def determine_season(date): # Determine the season based on the given date.
+    month = date.month
+    if month in [12, 1, 2]:
+        return 'winter'
+    elif month in [6, 7, 8]:
+        return 'summer'
+    else:
+        return 'other'
+
+def get_sun_times(date, latitude, longitude): # Get sunrise and sunset times for the given date and location.
+    city = LocationInfo(latitude=latitude, longitude=longitude)
+    s = sun(city.observer, date=date)
+    return s['sunrise'], s['sunset']
+
+def sensor_insights(co2, activity, humidity, illumination, infrared, infrared_and_visible, pressure, temperature, tvoc, date, hour):
+    insights = []
+    date_obj = datetime.datetime.strptime(date, '%Y-%m-%d')
+    season = determine_season(date_obj)
+
+    # Barcelona coordinates
+    latitude = 41.3851
+    longitude = 2.1734
+
+    sunrise, sunset = get_sun_times(date_obj, latitude, longitude)
+    current_time = pytz.utc.localize(date_obj.replace(hour=hour))
+
+    # University closed hours: 8 PM to 8 AM
+    if 20 <= hour or hour < 8:
+        insights.append("University is closed. No actions needed.")
+        return insights
+
+    # Extend sunrise and sunset times for lighting rules
+    extended_sunrise = sunrise + datetime.timedelta(hours=2)
+    extended_sunset = sunset - datetime.timedelta(hours=1)
+
+    # Turn off lights if it's within 2 hours after sunrise or before sunset
+    if extended_sunrise < current_time < extended_sunset and illumination > 300:
+        insights.append("Consider closing the lights, there's probably sufficient natural light.")
+
+    # Air quality: Open the window if CO2 levels or TVOC are high, but consider the season
+    if co2 > 800:  # assuming 1000 ppm is a threshold for high CO2 levels
+        if season == 'summer':  # don't open window if it's too hot in summer
+            insights.append("Consider opening the window to reduce CO2 levels. Open the door in case of very high temperature outside.")
+        elif season == 'winter':  # don't open window if it's too cold in winter
+            insights.append("Consider opening the window to reduce CO2 levels. Open the door in case of very low temperature outside.")
+        else:
+            insights.append("Consider opening the window to reduce CO2 levels.")
+
+    if tvoc > 500:  # assuming 500 ppb is a threshold for high TVOC levels
+        if season == 'summer':
+            insights.append("Consider opening the window to improve air quality. Open the door in case of very high temperature outside.")
+        elif season == 'winter':
+            insights.append("Consider opening the window to improve air quality. Open the door in case of very low temperature outside.")
+        else:
+            insights.append("Consider opening the window to improve air quality.")
+
+    if not insights:
+        insights.append("No specific actions needed based on current sensor readings.")
+
+    return insights
+
+
 @app.route('/warnings.html')
 def get_warnings():
-    sensors = ["eui-24e124710c408089", "eui-24e124128c147444", "eui-24e124128c147500", "eui-24e124128c147204", "eui-24e124128c147499", "am307-9074", "q4-1003-7456", "eui-24e124128c147446", "eui-24e124128c147470"]
-    try:
-        sensorID = sensors[int(sensorId)-1] #Change from number from 1-9 to actual ID to retrieve info from table
-    except ValueError:
-        return jsonify({'error': 'Invalid sensorId'}), 400
-    # Fetch data for the specified sensor_id
+    # sensors = ["eui-24e124710c408089", "eui-24e124128c147444", "eui-24e124128c147500", "eui-24e124128c147204", "eui-24e124128c147499", "am307-9074", "q4-1003-7456", "eui-24e124128c147446", "eui-24e124128c147470"]
+    sensorID = "q4-1003-7456"
     sensor_data = fetch_sensor_data(sensorID)
-    # Create plots for the fetched sensor data
     last_update = sensor_data[-1]
-    return #render_template(sensorId + '.html',figures=json.dumps(figures))
+    last_update['received_at'] = parse(last_update['received_at']) - timedelta(hours=2)
+    # Format the 'received_at' field back to string
+    last_update['received_at'] = last_update['received_at'].strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+
+    # Prepare to create insights
+    date, hour = last_update['received_at'].split('T') 
+
+    # Create the insights
+    insights = sensor_insights (last_update['co2'], last_update['activity'], last_update['humidity'], 
+                                last_update['illumination'], last_update['infrared'], last_update['infrared_and_visible'], 
+                                last_update['pressure'], last_update['temperature'], last_update['tvoc'], date, hour)
+    return render_template('warnings.html', last_update=last_update, insights = insights)
 
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 mqttc.on_connect = on_connect

@@ -93,19 +93,32 @@
         </div>
 
         <div class="instructions" style="margin-bottom: 30px;">
-            <p>Below you will see the data from the last update of the sensor and the possible recommendations.</p>
+            <p>Below you will see the data from the last update of the sensor.</p>
         </div>
 
-        <!-- <div class="recommendations">
+        <div class="last-update">
+            <h2>Last Update</h2>
+            <p>Received At: {{ last_update.received_at }}</p>
+            <p>Temperature: {{ last_update.temperature }}</p>
+            <p>CO2: {{ last_update.co2 }}</p>
+            <p>Humidity: {{ last_update.Humidity }}</p>
+            <p>Activity: {{ last_update.Activity }}</p>
+            <p>Illumination: {{ last_update.illumination }}</p>
+            <p>Infrared: {{ last_update.infrared }}</p>
+            <p>Infrared and visible: {{ last_update.infrared_and_visible }}</p>
+            <p>Pressure: {{ last_update.pressure }}</p>
+            <p>Tvoc: {{ last_update.tvoc }}</p>
+        </div>
+
+        <div class="warnings">
             <h2>Recommendations</h2>
             <p>Based on the data from the last update of the sensor, we recommend the following actions:</p>
             <ul>
-                <li>Turn off the lights in the room.</li>
-                <li>Unplug the devices that are not being used.</li>
-                <li>Close the windows to avoid heat loss.</li>
-            </ul> -->
-
-    </div>
+                {% for insight in insights %}
+                    <li>{{ insight }}</li>
+                {% endfor %}
+            </ul>
+        </div>
 
     <script>
         function showSensors() {
