@@ -5,51 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="decoration.css">
     <title>Smart UAB</title>
-    <style>
-        .sensor-dropdown {
-            display: none;
-            position: absolute;
-            background-color: #e12929;
-            min-width: 10px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-        }
-        .sensor-dropdown a {
-            color: rgb(255, 255, 255);
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-        }
-        .sensor-dropdown a:hover {
-            background-color: #b41e1e;
-        }
 
-        .search-box {
-            margin-top: 10px;  
-        }
-
-        #prediction-plot {
-            display: none; 
-            width: 100%;
-            height: auto;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        table, th, td {
-            border: 1px solid black;
-        }
-        th, td {
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-
-
-    </style>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -60,10 +16,6 @@
             <a href="index.html">
                 <h1>WATTWise</h1>
             </a>
-            <form id="search-form">
-                <input type="text" id="search-input" placeholder="Search ...">
-                <button class="search-btn" type="submit">Search</button>
-            </form>
         </div>
 
         <div class="tabs">
@@ -88,38 +40,48 @@
             </li>
             <li>
                 <i class="Recommendations"></i>
-                <a href="#">Recommendations</a>
+                <a href="warnings.html">Recommendations</a>
             </li>
         </div>
 
-        <div class="instructions" style="margin-bottom: 30px;">
-            <p>Below you will see the data from the last update of the sensor.</p>
+        </div class="wrapper">
+            <div class="content">
+                <div class="instructions" style="margin-bottom: 30px;">
+                    <p>Below you will see the data from the last update of the sensor.</p>
+                </div>
+
+                <div class="last-update">
+                    <h2>Last Update</h2>
+                    <p>Date: {{ date }}</p>
+                    <p>Hour: {{ hour }}</p>
+                    <p>Temperature: {{ temperature }}</p>
+                    <p>CO2: {{ co2 }}</p>
+                    <p>Humidity: {{ humidity }}</p>
+                    <p>Activity: {{ activity }}</p>
+                    <p>Illumination: {{ illumination }}</p>
+                    <p>Infrared: {{ infrared }}</p>
+                    <p>Infrared and visible: {{ infrared_and_visible }}</p>
+                    <p>Pressure: {{ pressure }}</p>
+                    <p>Tvoc: {{ tvoc }}</p>
+                </div>
+
+                <div class="warnings">
+                    <h2>Recommendations</h2>
+                    <p>Based on the data from the last update of the sensor, we recommend the following actions:</p>
+                    <ul>
+                        {% for insight in insights %}
+                            <li>{{ insight }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer">
+                <p class="footer-text">WATTWise - Smart UAB</p>
+            </div>
         </div>
 
-        <div class="last-update">
-            <h2>Last Update</h2>
-            <p>Received At: {{ last_update.received_at }}</p>
-            <p>Temperature: {{ last_update.temperature }}</p>
-            <p>CO2: {{ last_update.co2 }}</p>
-            <p>Humidity: {{ last_update.Humidity }}</p>
-            <p>Activity: {{ last_update.Activity }}</p>
-            <p>Illumination: {{ last_update.illumination }}</p>
-            <p>Infrared: {{ last_update.infrared }}</p>
-            <p>Infrared and visible: {{ last_update.infrared_and_visible }}</p>
-            <p>Pressure: {{ last_update.pressure }}</p>
-            <p>Tvoc: {{ last_update.tvoc }}</p>
-        </div>
-
-        <div class="warnings">
-            <h2>Recommendations</h2>
-            <p>Based on the data from the last update of the sensor, we recommend the following actions:</p>
-            <ul>
-                {% for insight in insights %}
-                    <li>{{ insight }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-
+<!-- ############################################################################################################################# -->
     <script>
         function showSensors() {
             document.getElementById("sensorDropdown").style.display = "block";
@@ -130,4 +92,5 @@
         }
     </script>
 </body>
+
 </html>

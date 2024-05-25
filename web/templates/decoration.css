@@ -74,13 +74,11 @@ body{
     background-color: #b41e1e;
 }
 
-/* Title size */
 .container .search-box {
     position: relative;
     font-size: 26px;  
 }
 
-/* Add a new class for the black text */
 .black-text {
     color: #000000;
     margin: 5px;
@@ -137,18 +135,6 @@ body{
     align-items: center;
     flex-direction: column;
 }
-
-/* .container .card{
-    position: relative;
-    font-size: 14px;
-    border: 1px solid rgba(164, 20, 20, 0.6);
-    border-radius: 0.4rem;
-    line-height: 20px;
-    width: 285px;
-    height: 360px;
-    overflow: hidden;
-    transition: all 0.5s ease;
-} */
 
 .container .card {
     font-size: 14px;
@@ -318,6 +304,9 @@ body{
     font-size: 15px;
 }
 
+
+/* ################################# PREDICTION ################################# */
+
 .instructions p {
     color: #000000;
     font-size: 17px;
@@ -344,6 +333,54 @@ body{
     border: 1px solid black;
 }
 
+.search-box {
+    margin-top: 10px;  /* Adjust as needed */
+}
+
+#prediction-plot {
+    display: none; /* Initially hidden */
+    width: 100%;
+    height: auto;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+table, th, td {
+    border: 1px solid black;
+}
+th, td {
+    padding: 8px;
+    text-align: left;
+}
+th {
+    background-color: #f2f2f2;
+}
+#prediction-table {
+    margin-top: 50px;
+}
+#prediction-table th {
+    background-color: #e12929;
+    color: #000000; 
+}
+#prediction-table td {
+    color: black;
+}
+
+#download {
+    display: none;  /* Initially hidden */
+    margin-top: 450px;
+    background-color: #e12929;
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+}
+
 #prediction-form input[type="submit"] {
     background-color: #e12929;
     color: white;
@@ -356,6 +393,68 @@ body{
     background-color: darkred;
 }
 
+/* ################################# WARNINGS ################################# */
+.last-update {
+    color: #000000; /* Black color */
+}
+.warnings {
+    color: #000000; /* Black color */
+}
+
+.last-update, .warnings {
+    background-color: #ffffff;
+    border: 1px solid #e12929;
+    padding: 20px;
+    margin-bottom: 20px;
+    color: #000000;
+}
+
+.last-update h2, .warnings h2 {
+    color: #e12929;
+    border-bottom: 1px solid #e12929;
+    padding-bottom: 10px;
+}
+
+.last-update p, .warnings p {
+    margin-bottom: 10px;
+}
+
+.warnings ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.warnings ul li {
+    padding: 5px 0;
+    border-bottom: 1px solid #e12929;
+}
+
+.warnings ul li:last-child {
+    border-bottom: none;
+}
+
+
+/* ################################# To handle the body - footer placement #################################*/
+
+.footer {
+    background-color: #e12929;
+    color: #ffffff;
+    text-align: center;
+    padding: 20px 0;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.content {
+    flex: 1;
+}
 
 @media screen and (max-width: 550px) {
     .search-box{

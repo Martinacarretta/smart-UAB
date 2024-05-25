@@ -280,7 +280,7 @@ def get_sun_times(date, latitude, longitude): # Get sunrise and sunset times for
 
 def sensor_insights(co2, activity, humidity, illumination, infrared, infrared_and_visible, pressure, temperature, tvoc, date, hour):
     insights = []
-    date_obj = datetime.datetime.strptime(date, '%Y-%m-%d')
+    date_obj = datetime.strptime(date, '%Y-%m-%d')
     season = determine_season(date_obj)
 
     # Barcelona coordinates
@@ -296,8 +296,8 @@ def sensor_insights(co2, activity, humidity, illumination, infrared, infrared_an
         return insights
 
     # Extend sunrise and sunset times for lighting rules
-    extended_sunrise = sunrise + datetime.timedelta(hours=2)
-    extended_sunset = sunset - datetime.timedelta(hours=1)
+    extended_sunrise = sunrise + timedelta(hours=2)
+    extended_sunset = sunset - timedelta(hours=1)
 
     # Turn off lights if it's within 2 hours after sunrise or before sunset
     if extended_sunrise < current_time < extended_sunset and illumination > 300:
@@ -332,19 +332,26 @@ def get_warnings():
     sensorID = "q4-1003-7456"
     sensor_data = fetch_sensor_data(sensorID)
     last_update = sensor_data[-1]
-    last_update['received_at'] = parse(last_update['received_at']) - timedelta(hours=2)
+    print(last_update)
+    # last_update[1] = parse(last_update['1']) - timedelta(hours=2)
     # Format the 'received_at' field back to string
-    last_update['received_at'] = last_update['received_at'].strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+    # last_update['received_at'] = last_update['received_at'].strftime('%Y-%m-%dT%H:%M:%S.%fZ')
 
     # Prepare to create insights
-    date, hour = last_update['received_at'].split('T') 
-
+    date, hour = last_update[1].split('T') 
+    hour = int(hour[:2]) + 2
+    print(date, hour)
     # Create the insights
-    insights = sensor_insights (last_update['co2'], last_update['activity'], last_update['humidity'], 
-                                last_update['illumination'], last_update['infrared'], last_update['infrared_and_visible'], 
-                                last_update['pressure'], last_update['temperature'], last_update['tvoc'], date, hour)
-    return render_template('warnings.html', last_update=last_update, insights = insights)
-
+    insights = sensor_insights (last_update[3], last_update[4], last_update[4], 
+                                last_update[5], last_update[6], last_update[7], 
+                                last_update[8], last_update[9], last_update[9], date, hour)
+    (temperature, co2, humidity, activity, illumination, infrared, infrared_and_visible, pressure, tvoc) = (last_update[9], last_update[3], last_update[4], 
+                                                                                                            last_update[2], last_update[5], last_update[6], 
+                                                                                                            last_update[7], last_update[8], last_update[10])
+    return render_template('warnings.html', date=date, hour=hour, temperature=temperature, co2=co2, humidity=humidity, 
+                           activity=activity, illumination=illumination, infrared=infrared, 
+                           infrared_and_visible=infrared_and_visible, pressure=pressure, 
+                           tvoc=tvoc, insights=insights)
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 mqttc.on_connect = on_connect
 mqttc.on_message = on_message
