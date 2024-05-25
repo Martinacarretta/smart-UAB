@@ -264,6 +264,20 @@ def create_prediction():
     print(future_dates)
     return jsonify({'prediction': future_dates.to_dict('records'), 'image': image_base64})
 
+########################## WARNINGS ############################################
+@app.route('/warnings.html')
+def get_warnings():
+    sensors = ["eui-24e124710c408089", "eui-24e124128c147444", "eui-24e124128c147500", "eui-24e124128c147204", "eui-24e124128c147499", "am307-9074", "q4-1003-7456", "eui-24e124128c147446", "eui-24e124128c147470"]
+    try:
+        sensorID = sensors[int(sensorId)-1] #Change from number from 1-9 to actual ID to retrieve info from table
+    except ValueError:
+        return jsonify({'error': 'Invalid sensorId'}), 400
+    # Fetch data for the specified sensor_id
+    sensor_data = fetch_sensor_data(sensorID)
+    # Create plots for the fetched sensor data
+    last_update = sensor_data[-1]
+    return #render_template(sensorId + '.html',figures=json.dumps(figures))
+
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 mqttc.on_connect = on_connect
 mqttc.on_message = on_message
