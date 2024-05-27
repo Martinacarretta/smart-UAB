@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="decoration.css">
+    <title>Smart UAB</title>
+
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+<body id="test">
+    <div class="container">
+        <div class="search-box">
+            <a href="index.html">
+                <h1>WATTWise</h1>
+            </a>
+        </div>
+
+        <div class="tabs">
+            <li>
+                <i class="sensors"></i>
+                <a href="#" class="sensor-tab" onclick="showSensors()">Sensors</a>
+                <div id="sensorDropdown" class="sensor-dropdown">
+                    <a href="#" onclick="selectSensor(1)">Sensor 1</a>
+                    <a href="#" onclick="selectSensor(2)">Sensor 2</a>
+                    <a href="#" onclick="selectSensor(3)">Sensor 3</a>
+                    <a href="#" onclick="selectSensor(4)">Sensor 4</a>
+                    <a href="#" onclick="selectSensor(5)">Sensor 5</a>
+                    <a href="#" onclick="selectSensor(6)">Sensor 6</a>
+                    <a href="#" onclick="selectSensor(7)">Sensor 7</a>
+                    <a href="#" onclick="selectSensor(8)">Sensor 8</a>
+                    <a href="#" onclick="selectSensor(9)">Sensor 9</a>
+                </div>
+            </li>
+            <li>
+                <i class="Predictions"></i>
+                <a href="predictions.html">Predictions</a>
+            </li>
+            <li>
+                <i class="Predictions"></i>
+                <a href="PV.html">PV predictions</a>
+            </li>
+            <li>
+                <i class="Recommendations"></i>
+                <a href="warnings.html">Recommendations</a>
+            </li>
+        </div>
+
+        </div class="wrapper">
+            <div class="content">
+                <div class="instructions" style="margin-bottom: 30px;">
+                    <p>Below you will see the weather predicitons and the PV production.</p>
+                </div>
+                <div class="table-container">
+                    <table class="table2">
+                        <tr>
+                            <th>fecha</th>
+                            <th>tmed</th>
+                            <th>prec</th>
+                            <th>tmin</th>
+                            <th>tmax</th>
+                            <th>predicted_fv</th>
+                        </tr>
+                        {% for _, row in df.iterrows() %}
+                            <tr>
+                                <td>{{ row['fecha'].strftime('%Y-%m-%d') }}</td>
+                                <td>{{ row['tmed'] }}</td>
+                                <td>{{ row['prec'] }}</td>
+                                <td>{{ row['tmin'] }}</td>
+                                <td>{{ row['tmax'] }}</td>
+                                <td>{{ row['predicted_fv'] }}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+
+                <div class="images">
+                    <img src="data:image/png;base64,{{ image_base64 }}" alt="Image 1">
+                    <img src="data:image/png;base64,{{ image_base64_ }}" alt="Image 2">
+                </div>
+            </div>
+
+            <div class="footer">
+                <p class="footer-text">WATTWise - Smart UAB</p>
+            </div>
+        </div>
+
+<!-- ############################################################################################################################# -->
+    <script>
+        function showSensors() {
+            document.getElementById("sensorDropdown").style.display = "block";
+        }
+
+        function selectSensor(sensorId) {
+            window.location.href = sensorId + ".html";
+        }
+    </script>
+</body>
+
+</html>

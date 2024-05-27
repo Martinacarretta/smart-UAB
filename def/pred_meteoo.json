@@ -1,0 +1,79 @@
+[
+    {
+        "fecha": "2024-05-27",
+        "tmed": 20.0,
+        "prec": 0.0,
+        "tmin": 16.0,
+        "horatmin": "",
+        "tmax": 24.0,
+        "sol": "",
+        "hrMedia": "",
+        "fv": ""
+    },
+    {
+        "fecha": "2024-05-28",
+        "tmed": 21.0,
+        "prec": 0.0,
+        "tmin": 16.0,
+        "horatmin": "",
+        "tmax": 26.0,
+        "sol": "",
+        "hrMedia": "",
+        "fv": ""
+    },
+    {
+        "fecha": "2024-05-29",
+        "tmed": 21.0,
+        "prec": 0.0,
+        "tmin": 14.0,
+        "horatmin": "",
+        "tmax": 28.0,
+        "sol": "",
+        "hrMedia": "",
+        "fv": ""
+    },
+    {
+        "fecha": "2024-05-30",
+        "tmed": 20.5,
+        "prec": 45.0,
+        "tmin": 15.0,
+        "horatmin": "",
+        "tmax": 26.0,
+        "sol": "",
+        "hrMedia": "",
+        "fv": ""
+    },
+    {
+        "fecha": "2024-05-31",
+        "tmed": 19.5,
+        "prec": 0.0,
+        "tmin": 16.0,
+        "horatmin": "",
+        "tmax": 23.0,
+        "sol": "",
+        "hrMedia": "",
+        "fv": ""
+    },
+    {
+        "fecha": "2024-06-01",
+        "tmed": 20.0,
+        "prec": 0.0,
+        "tmin": 15.0,
+        "horatmin": "",
+        "tmax": 25.0,
+        "sol": "",
+        "hrMedia": "",
+        "fv": ""
+    },
+    {
+        "fecha": "2024-06-02",
+        "tmed": 19.5,
+        "prec": 0.0,
+        "tmin": 14.0,
+        "horatmin": "",
+        "tmax": 25.0,
+        "sol": "",
+        "hrMedia": "",
+        "fv": ""
+    }
+]

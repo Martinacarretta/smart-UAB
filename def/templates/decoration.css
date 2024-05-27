@@ -388,6 +388,39 @@ th {
     background-color: darkred;
 }
 
+/* ################################# PV PRODUCTION ################################# */
+.table-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 15px 0;
+}
+
+.table2 {
+    background-color: white;
+    width: 100%;  /* This will make the table take up the full width of the container */
+    color: black
+}
+
+.table2 th {
+    background-color: #e12929;
+    color: white;
+}
+
+.images {
+    display: flex;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 15px 0;
+}
+
+.images img {
+    flex: 1;
+    max-width: 49%;  /* Ensure each image takes up nearly half of the container */
+    height: auto;
+    object-fit: contain;
+}
+
 /* ################################# WARNINGS ################################# */
 .last-update {
     color: #000000; /* Black color */

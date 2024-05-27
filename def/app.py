@@ -17,6 +17,14 @@ from astral.sun import sun
 from astral import LocationInfo
 import pytz
 
+import xml.etree.ElementTree as ET
+import requests
+import pandas as pd
+import joblib
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, explained_variance_score
+import numpy as np
+
 # Initialize Flask and SocketIO
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -57,7 +65,7 @@ def save_to_sqlite(data, info, time):
     try:
         conn = sqlite3.connect('data.db')
         c = conn.cursor()
-        #c.execute('''DROP TABLE received_data''')
+        #c.execute('''TRUNCATE TABLE received_data''')
         c.execute('''CREATE TABLE IF NOT EXISTS received_data (
                      device_id STRING default NULL, received_at TIMESTAMP default NULL, activity INTEGER default NULL, co2 INTEGER default NULL, humidity REAL default NULL,
                      illumination INTEGER default NULL, infrared INTEGER default NULL, infrared_and_visible INTEGER default NULL, pressure REAL default NULL,
@@ -145,7 +153,11 @@ def return_deco():
 def return_js():
     return send_file('templates/script.js')
 
-################################## PREDICTIONS ##################################
+################################## PREDICTIONS ######################################################################################################
+################################## PREDICTIONS ######################################################################################################
+################################## PREDICTIONS ######################################################################################################
+################################## PREDICTIONS ######################################################################################################
+
 def predict_energy_occupation(df, result_mode, month, week_day, hour=None):
     if hour is None:
         filtered_df = df[(df['Month'] == month) & (df['Week_day'] == week_day)]
@@ -262,7 +274,182 @@ def create_prediction():
     print(future_dates)
     return jsonify({'prediction': future_dates.to_dict('records'), 'image': image_base64})
 
-########################## WARNINGS ############################################
+################################## PV PRODUCTION ######################################################################################################
+################################## PV PRODUCTION ######################################################################################################
+################################## PV PRODUCTION ######################################################################################################
+################################## PV PRODUCTION ######################################################################################################
+
+def fetch_xml_data(url):
+    response = requests.get(url)
+    response.encoding = "latin-1"
+    return response.content
+
+def parse_xml_to_json(xml_data):
+    root = ET.fromstring(xml_data)
+    json_data = []
+
+    for day in root.find("prediccion").findall("dia"):
+        fecha = day.attrib["fecha"]
+        tmax = float(day.find("temperatura/maxima").text)
+        tmin = float(day.find('temperatura/minima').text)
+        tmed = (tmax + tmin) / 2
+
+        prec = 0.0
+        for prob_prec in day.findall("prob_precipitacion"):
+            if prob_prec.attrib.get("periodo") == "00-24":
+                prec = float(prob_prec.text) if prob_prec.text else 0.0
+                break
+        json_data.append({
+            "fecha": fecha,
+            "tmed": tmed,
+            "prec": prec,
+            "tmin": tmin,
+            "horatmin": "",
+            "tmax": tmax,
+            "sol": "",
+            "hrMedia": "",
+            "fv": ""
+        })
+    return json_data
+
+
+def save_json(data, filename):
+    with open(filename, 'w') as json_file:
+        json.dump(data, json_file, indent=4)
+
+
+def load_json(filename):
+    with open(filename) as json_file:
+        return json.load(json_file)
+
+
+def create_dataframe(json_data):
+    data = []
+    for entry in json_data:
+        entry_data = {
+            'fecha': entry['fecha'],
+            'tmed': entry['tmed'],
+            'prec': float(entry['prec']) if 'prec' in entry else 0.0,
+            'tmin': entry['tmin'],
+            'tmax': entry['tmax'],
+        }
+        data.append(entry_data)
+    return pd.DataFrame(data)
+
+
+def plot_meteorological_data(df):
+    df['fecha'] = pd.to_datetime(df['fecha'])
+
+    plt.figure(figsize=(10, 6))
+
+    # Create a second y-axis for precipitation and plot it first
+    ax2 = plt.twinx()
+    max_prec = df['prec'].max() + 5  # Set the max value for the precipitation axis
+    ax2.bar(df['fecha'], df['prec'], color='lightyellow', label='prec')
+    ax2.set_ylabel('Precipitation (mm)', fontsize=18)
+    ax2.set_ylim(0, max_prec)
+
+    # Now plot the temperature data
+    plt.plot(df['fecha'], df['tmed'], marker='o', linestyle='-', color='r', label='tmed')
+    plt.plot(df['fecha'], df['tmin'], marker='o', linestyle='-', color='b', label='tmin')
+    plt.plot(df['fecha'], df['tmax'], marker='o', linestyle='-', color='g', label='tmax')
+    
+    plt.title('Daily Weather Data', fontsize=18)
+    plt.xlabel('Date', fontsize=20)
+    plt.ylabel('Temperature (°C)', fontsize=15)
+    plt.grid(True)
+    plt.xticks(rotation=0, fontsize=20)
+    plt.legend()
+
+    plt.tight_layout()
+    buf = BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    image_base64 = base64.b64encode(buf.read()).decode('utf-8')
+    buf.close()
+    return image_base64
+
+
+def preprocess_input(data):
+    for entry in data:
+        entry['fecha'] = pd.to_datetime(entry['fecha']).toordinal()
+        entry['prec'] = float(entry['prec']) if 'prec' in entry else 0.0
+        # Assuming 'sol' is not provided in new data, set it to 0
+        entry['sol'] = 0.0
+    return pd.DataFrame(data)
+
+
+def predict_fv(input_data, model_filename):
+    # Load the model
+    model = joblib.load(model_filename)
+    # Preprocess the input data
+    preprocessed_data = preprocess_input(input_data)
+    # Select relevant features
+    features = preprocessed_data[['fecha', 'tmed', 'prec', 'tmin', 'tmax', 'sol']]
+    # Make predictions
+    predictions = model.predict(features)
+    # Convert dates back to readable format
+    preprocessed_data['fecha'] = preprocessed_data['fecha'].map(lambda x: pd.Timestamp.fromordinal(x).strftime('%Y-%m-%d'))
+    # Add predictions to the DataFrame
+    preprocessed_data['predicted_fv'] = predictions
+    return preprocessed_data[['fecha', 'predicted_fv']]
+
+
+def plot_predictions(predictions):
+    df = pd.DataFrame(predictions)
+    df['fecha'] = pd.to_datetime(df['fecha'])
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(df['fecha'], df['predicted_fv'], marker='o', linestyle='-', color='b')
+    plt.title('Predicted FV over Time')
+    plt.xlabel('Date')
+    plt.ylabel('Predicted FV')
+    plt.grid(True)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    
+    buf = BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    image_base64_ = base64.b64encode(buf.read()).decode('utf-8')
+    buf.close()
+    return image_base64_
+
+
+@app.route('/PV.html')
+def get_warnings2():
+    url_aemet_pred = "https://www.aemet.es/xml/municipios/localidad_08266.xml"
+    xml_data = fetch_xml_data(url_aemet_pred)
+    json_data = parse_xml_to_json(xml_data)
+
+    json_filename = 'pred_meteoo.json'
+    save_json(json_data, json_filename)
+
+    loaded_json_data = load_json(json_filename)
+    df = create_dataframe(loaded_json_data)
+    image_base64 = plot_meteorological_data(df)
+    print(df)
+
+    # Model prediction (ensure 'best_model.pkl' is available)
+    model_filename = 'best.pkl'
+    predictions = predict_fv(loaded_json_data, model_filename)
+    print(predictions)
+
+    df['fecha'] = pd.to_datetime(df['fecha'])
+    predictions['fecha'] = pd.to_datetime(predictions['fecha'])
+
+    # Merge the two dataframes on 'fecha'
+    df = df.merge(predictions, on='fecha', how='left')
+
+    # Plot the predictions
+    image_base64_ = plot_predictions(predictions)
+
+    return render_template('PV.html', df=df, image_base64=image_base64, image_base64_=image_base64_)
+
+################################## WARNINGS ######################################################################################################
+################################## WARNINGS ######################################################################################################
+################################## WARNINGS ######################################################################################################
+################################## WARNINGS ######################################################################################################
 
 def determine_season(date): # Determine the season based on the given date.
     month = date.month
@@ -331,14 +518,10 @@ def sensor_insights(co2, activity, humidity, illumination, infrared, infrared_an
 
 @app.route('/warnings.html')
 def get_warnings():
-    # sensors = ["eui-24e124710c408089", "eui-24e124128c147444", "eui-24e124128c147500", "eui-24e124128c147204", "eui-24e124128c147499", "am307-9074", "q4-1003-7456", "eui-24e124128c147446", "eui-24e124128c147470"]
     sensorID = "q4-1003-7456"
     sensor_data = fetch_sensor_data(sensorID)
     last_update = sensor_data[-1]
     print(last_update)
-    # last_update[1] = parse(last_update['1']) - timedelta(hours=2)
-    # Format the 'received_at' field back to string
-    # last_update['received_at'] = last_update['received_at'].strftime('%Y-%m-%dT%H:%M:%S.%fZ')
 
     # Prepare to create insights
     date, hour = last_update[1].split('T') 
@@ -355,6 +538,7 @@ def get_warnings():
                            activity=activity, illumination=illumination, infrared=infrared, 
                            infrared_and_visible=infrared_and_visible, pressure=pressure, 
                            tvoc=tvoc, insights=insights)
+
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 mqttc.on_connect = on_connect
 mqttc.on_message = on_message
