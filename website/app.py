@@ -528,9 +528,9 @@ def get_warnings():
     hour = int(hour[:2]) + 2
     print(date, hour)
     # Create the insights
-    insights = sensor_insights (last_update[3], last_update[4], last_update[4], 
+    insights = sensor_insights (last_update[3], last_update[2], last_update[4], 
                                 last_update[5], last_update[6], last_update[7], 
-                                last_update[8], last_update[9], last_update[9], date, hour)
+                                last_update[8], last_update[9], last_update[10], date, hour)
     (temperature, co2, humidity, activity, illumination, infrared, infrared_and_visible, pressure, tvoc) = (last_update[9], last_update[3], last_update[4], 
                                                                                                             last_update[2], last_update[5], last_update[6], 
                                                                                                             last_update[7], last_update[8], last_update[10])
